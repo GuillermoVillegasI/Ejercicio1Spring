@@ -25,19 +25,18 @@ public class LibroServicio {
     private EditorialServicio editorialServicio;
 
     @Transactional(rollbackFor = Exception.class) // MODIFICA LA BASE , SI HAY ERROR EN LA MODIFICACION TIRA EXCEPTION
-    public Libro crear(String id, long isbn, String titulo, Integer anio, Integer ejemplares, Integer ejemplaresPrestados,
-            Integer ejemplaresRestantes, boolean alta, String idAutor, String idEditorial) throws ErrorServicio {
+    public Libro crear(long isbn, String titulo, Integer anio, Integer ejemplares, String idAutor, String idEditorial) throws ErrorServicio {
 
         Libro libro = new Libro();
-        validar(titulo, anio, ejemplares, ejemplaresPrestados, ejemplaresRestantes);
+        validar(isbn, titulo, anio, ejemplares, idAutor, idEditorial);
 
         libro.setIsbn(isbn);
         libro.setTitulo(titulo);
         libro.setAnio(anio);
         libro.setEjemplares(ejemplares);
-        libro.setEjemplaresPrestados(ejemplaresPrestados);
-        libro.setEjemplaresRestantes(ejemplaresRestantes);
-        libro.setAlta(alta);
+        libro.setEjemplaresPrestados(0);
+        libro.setEjemplaresRestantes(ejemplares);
+        libro.setAlta(true);
 
         Editorial editorial = editorialServicio.buscarPorId(idEditorial);
         Autor autor = autorServicio.buscarPorId(idAutor);
@@ -47,6 +46,36 @@ public class LibroServicio {
 
         return libroRepositorio.save(libro);
 
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void modificar(String id, long isbn, String titulo, Integer anio, Integer ejemplares, String idAutor, String idEditorial) throws ErrorServicio {
+        validarTitulo(titulo);
+        Optional<Libro> respuesta = libroRepositorio.findById(id);
+
+        if (respuesta.isPresent()) {
+
+            Libro libro = respuesta.get();
+
+            libro.setIsbn(isbn);
+            libro.setTitulo(titulo);
+            libro.setAnio(anio);
+            libro.setEjemplares(ejemplares);
+           
+            
+            Editorial editorial = editorialServicio.buscarPorId(idEditorial);
+            Autor autor = autorServicio.buscarPorId(idAutor);
+
+            libro.setEditorial(editorial);
+            libro.setAutor(autor);
+
+            libroRepositorio.save(libro);
+
+        } else {
+
+            throw new ErrorServicio(" No se encontro el Libro ");
+
+        }
     }
 
     @Transactional(readOnly = true) // SOLO LEER EN BASE DE DATOS ------ No DEBERIA MODIFICAR NADA EN LA BASE , PERO SI POR ALGUN ERROR TIENE QUE MODIFICAR , TIRA ERROR Y NOS AVISA
@@ -65,11 +94,16 @@ public class LibroServicio {
         }
 
     }
-    
-    public List<Libro> buscarPorTitulo (String titulo){
-        
+
+    @Transactional(readOnly = true)
+    public List<Libro> listar() {
+        return libroRepositorio.findAll();
+    }
+
+    public List<Libro> buscarPorTitulo(String titulo) {
+
         return libroRepositorio.buscarPorTitulo(titulo);
-        
+
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -91,41 +125,39 @@ public class LibroServicio {
 
     }
 
-    public void modificar(String id, String titulo, boolean alta) throws ErrorServicio {
-
-        validarTitulo(titulo);
+    @Transactional(rollbackFor = Exception.class)
+    public void eliminar(String id) throws ErrorServicio {
 
         Optional<Libro> respuesta = libroRepositorio.findById(id);
         if (respuesta.isPresent()) {
 
-            Libro libro = respuesta.get();
-            libro.setTitulo(titulo);
-            libro.setAlta(alta);
-
-            libroRepositorio.save(libro);
+            libroRepositorio.deleteById(respuesta.get().getId());
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Libro ");
+            throw new ErrorServicio(" No se encontro el Libro ");
 
         }
     }
 
-    public void elimninar(String id) throws ErrorServicio {
+    @Transactional(rollbackFor = Exception.class)
+    public void eliminarPorAutor(String id) throws ErrorServicio {
 
-        Optional<Libro> respuesta = libroRepositorio.findById(id);
-        if (respuesta.isPresent()) {
+        List<Libro> libros = listar();
 
-            Libro libro = respuesta.get();
-            libroRepositorio.deleteById(id);
+        for (Libro l : libros) {
+            if (l.getAutor().getId() == id) {
+                l.getId();
+                libroRepositorio.deleteById(l.getId());
 
-            libroRepositorio.save(libro);
+            } else {
 
-        } else {
+                throw new ErrorServicio(" No se encontro el Libro ");
 
-            throw new ErrorServicio(" No se encontro la Libro ");
+            }
 
         }
+
     }
 
     public void darDeBaja(String id) throws ErrorServicio {
@@ -134,24 +166,30 @@ public class LibroServicio {
         if (respuesta.isPresent()) {
 
             Libro libro = respuesta.get();
-            libro.setAlta(false);
 
+            if (libro.getAlta() == true) {
+                libro.setAlta(false);
+            } else {
+                libro.setAlta(true);
+            }
             libroRepositorio.save(libro);
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Libro ");
+            throw new ErrorServicio(" No se encontro el Libro ");
 
         }
 
     }
 
-    private void validar(String titulo, Integer anio, Integer ejemplares, Integer ejemplaresPrestados,
-            Integer ejemplaresRestantes) throws ErrorServicio {
+    private void validar(Long isbn, String titulo, Integer anio, Integer ejemplares, String idAutor, String idEditorial) throws ErrorServicio {
+        if (isbn.toString() == null || isbn <= 0) {
+            throw new ErrorServicio(" El isbn del Libro no puede ser Nulo. ");
 
+        }
         if (titulo == null || titulo.isEmpty()) {
 
-            throw new ErrorServicio(" El nombre de la Libro no puede ser Nulo. ");
+            throw new ErrorServicio(" El nombre del Libro no puede ser Nulo. ");
 
         }
         if (anio == null || anio < 0) {
@@ -159,22 +197,20 @@ public class LibroServicio {
             throw new ErrorServicio(" El año tiene un valor incorrecto ");
 
         }
-        if (ejemplares == null || anio < 0) {
+        if (ejemplares == null || ejemplares < 0) {
 
-            throw new ErrorServicio(" El nombre de la Libro no puede ser Nulo. ");
-
-        }
-        if (ejemplaresPrestados == null || anio < 0) {
-
-            throw new ErrorServicio(" El nombre de la Libro no puede ser Nulo. ");
+            throw new ErrorServicio(" El nombre del Libro no puede ser Nulo. ");
 
         }
-        if (ejemplaresRestantes == null || anio < 0) {
+        if (idAutor == null) {
 
-            throw new ErrorServicio(" El nombre de la Libro no puede ser Nulo. ");
+            throw new ErrorServicio(" El autor del Libro no es correcto. ");
 
         }
+        if (idEditorial == null) {
 
+            throw new ErrorServicio(" La editorial del Libro no es correcta. ");
+        }
     }
 
     private void validarTitulo(String titulo) throws ErrorServicio {

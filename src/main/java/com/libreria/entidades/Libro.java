@@ -20,8 +20,11 @@ public class Libro {
     private Integer ejemplaresPrestados;
     private Integer ejemplaresRestantes;
     private boolean alta;
+    
     @ManyToOne
     private Autor autor;
+    
+    @ManyToOne
     private Editorial editorial;
 
     public Libro() {
@@ -96,7 +99,7 @@ public class Libro {
         this.ejemplaresRestantes = ejemplaresRestantes;
     }
 
-    public boolean isAlta() {
+    public boolean getAlta() {
         return alta;
     }
 

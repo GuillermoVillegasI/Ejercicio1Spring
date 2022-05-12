@@ -41,7 +41,7 @@ public class Autor {
         this.nombre = nombre;
     }
 
-    public boolean isAlta() {
+    public boolean getAlta() {
         return alta;
     }
 

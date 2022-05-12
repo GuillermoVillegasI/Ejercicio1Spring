@@ -1,8 +1,11 @@
 package com.libreria.servicios;
 
 import com.libreria.entidades.Editorial;
+import com.libreria.entidades.Libro;
 import com.libreria.errores.ErrorServicio;
 import com.libreria.repositorios.EditorialRepositorio;
+import com.libreria.repositorios.LibroRepositorio;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,16 +16,18 @@ public class EditorialServicio {
 
     @Autowired
     private EditorialRepositorio editorialRepositorio;
-    
+    @Autowired
+    private LibroRepositorio libroRepositorio;
+
     @Transactional(rollbackFor = Exception.class)
-    public void crear(String nombre, boolean alta) throws ErrorServicio {
+    public void crear(String nombre) throws ErrorServicio {
 
         Editorial editorial = new Editorial();
 
         validar(nombre);
 
         editorial.setNombre(nombre);
-        editorial.setAlta(alta);
+        editorial.setAlta(true);
 
         editorialRepositorio.save(editorial);
 
@@ -44,6 +49,7 @@ public class EditorialServicio {
         }
 
     }
+
     @Transactional(rollbackFor = Exception.class)
     public void consultar(String id) throws ErrorServicio {
 
@@ -62,17 +68,23 @@ public class EditorialServicio {
         }
 
     }
-    @Transactional(rollbackFor = Exception.class)
-    public void modificar(String id, String nombre, boolean alta) throws ErrorServicio {
 
-        validar(nombre);
+    @Transactional(readOnly = true)
+    public List<Editorial> listar() {
+        return editorialRepositorio.findAll();
+    }
+
+   @Transactional(rollbackFor = Exception.class)
+    public void modificar(String id , String nombre) throws ErrorServicio {
+
+      
 
         Optional<Editorial> respuesta = editorialRepositorio.findById(id);
         if (respuesta.isPresent()) {
 
             Editorial editorial = respuesta.get();
-            editorial.setNombre(nombre);
-            editorial.setAlta(alta);
+            
+           editorial.setNombre(nombre);
 
             editorialRepositorio.save(editorial);
 
@@ -82,6 +94,8 @@ public class EditorialServicio {
 
         }
     }
+
+
     public void darDeBaja(String id) throws ErrorServicio {
 
         Optional<Editorial> respuesta = editorialRepositorio.findById(id);
@@ -99,23 +113,28 @@ public class EditorialServicio {
         }
 
     }
-    @Transactional(rollbackFor = Exception.class)
-    public void elimninar(String id) throws ErrorServicio {
 
-        Optional<Editorial> respuesta = editorialRepositorio.findById(id);
-        if (respuesta.isPresent()) {
+      @Transactional(rollbackFor = Exception.class)
+    public void eliminar(String id) throws ErrorServicio {
 
-            Editorial editorial = respuesta.get();
-            editorialRepositorio.deleteById(id);
-
-            editorialRepositorio.save(editorial);
+        Optional<Editorial> editorialRespuesta = editorialRepositorio.findById(id);
+        List<Libro> libroRespuesta = libroRepositorio.buscarPorIdEditorial(id);
+        
+        if (editorialRespuesta.isPresent()) {
+            if (libroRespuesta.isEmpty()) {
+                editorialRepositorio.deleteById(editorialRespuesta.get().getId());
+            }else{
+                throw new ErrorServicio("ERROR ! La editorial tiene uno o mas Libros asignados ");
+            }
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Editorial ");
+            throw new ErrorServicio(" No se encontro la editorial , o tiene tiene asignado un Libro ");
 
         }
     }
+
+
 
     private void validar(String nombre) throws ErrorServicio {
 

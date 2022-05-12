@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
     <head>
-        <title>HOME</title>
+        <title>MODIFICAR AUTOR</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -11,15 +11,12 @@
             integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
             crossorigin="anonymous"
             />
-
-        <link rel="stylesheet" href="./style.css" />
+        <link rel="stylesheet" href="./style.css"/>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-black">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">
-                    <img src="static.img/libro.png" alt="libro" class="icon"/> Libreria</a
-                >
+                <a class="navbar-brand" href="/"><img src="static.img/libro.png" alt="libro" class="icon"/> Libreria</a>
                 <button
                     class="navbar-toggler"
                     type="button"
@@ -46,9 +43,21 @@
                 </div>
             </div>
         </nav>
-        
-       
-        <!--        <img alt="" class="imgindex" importance="auto" loading="auto" src="https://i.pinimg.com/originals/fb/30/d3/fb30d3329f7d6a6320277bcc5f0c5d19.gif"    >-->
+
+        <h1>MODIFICAR AUTOR</h1>
+
+        <form action="/actualizarAutor"  method="POST">
+            <p th:if="${Error != null}" th:text="${Error}" class="error"></p>
+            <p th:text="${descripcion}" class="exito"></p>
+
+            <div class="mb-3">
+                <label class="form-label">NOMBRE Y APELLIDO </label>
+                <input type="hidden" class="form-control" th:value="${autor.id}" name="id" />
+                <input type="text" class="form-control" name="nombre" th:value="${autor.nombre}" />
+            </div>
+
+            <button type="submit" class="btn btn-dark bg-black">MODIFICAR</button>
+        </form>
 
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"

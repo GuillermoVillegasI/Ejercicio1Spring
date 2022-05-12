@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
     <head>
-        <title>HOME</title>
+        <title>LIBRO</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -11,15 +11,12 @@
             integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
             crossorigin="anonymous"
             />
-
         <link rel="stylesheet" href="./style.css" />
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-black">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">
-                    <img src="static.img/libro.png" alt="libro" class="icon"/> Libreria</a
-                >
+                <a class="navbar-brand" href="/"><img src="static.img/libro.png" alt="libro" class="icon"/> Libreria</a>
                 <button
                     class="navbar-toggler"
                     type="button"
@@ -46,9 +43,54 @@
                 </div>
             </div>
         </nav>
-        
-       
-        <!--        <img alt="" class="imgindex" importance="auto" loading="auto" src="https://i.pinimg.com/originals/fb/30/d3/fb30d3329f7d6a6320277bcc5f0c5d19.gif"    >-->
+
+        <h1>CARGAR LIBRO</h1>
+
+
+
+        <form action="/cargar" method="POST">
+            <p th:if="${Error != null}" th:text="${Error}" class="error"></p>
+            <p th:text="${descripcion}" class="exito"></p>
+            <div class="mb-3">
+                <label class="form-label">ISBN </label>
+                <input type="text" class="form-control" name="isbn" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">TITULO</label>
+                <input type="text" class="form-control" name="titulo" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">AÑO</label>
+                <input type="text" class="form-control" name="anio" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">EJEMPLARES</label>
+                <input type="text" class="form-control" name="ejemplares" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">AUTOR</label>
+                <select class="form-select" name="idAutor">
+                    <option th:each="autor : ${autores}" th:value="${autor.id}"th:text="${autor.nombre}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">EDITORIAL</label>
+                <select class="form-select" name="idEditorial">
+                    <option th:each="editorial : ${editoriales}" th:value="${editorial.id}"th:text="${editorial.nombre}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-dark bg-black">Agregar</button>
+        </form>
+
+        <h1>LISTAR</h1>
+
+        <div class="d-grid gap-2 mx-auto">
+            <a class="btn btn-dark" th:href="@{/libro/listarLibro} "  
+               >LISTAR</a
+            >
+        </div>
+
+
 
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"

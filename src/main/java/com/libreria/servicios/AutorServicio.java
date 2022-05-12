@@ -1,26 +1,34 @@
 package com.libreria.servicios;
 
 import com.libreria.entidades.Autor;
+import com.libreria.entidades.Libro;
 import com.libreria.errores.ErrorServicio;
 import com.libreria.repositorios.AutorRepositorio;
+import com.libreria.repositorios.LibroRepositorio;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class AutorServicio {
 
     @Autowired
     private AutorRepositorio autorRepositorio;
     
+    @Autowired
+    private LibroRepositorio libroRepositorio;
+
     @Transactional(rollbackFor = Exception.class)
-    public void crear(String nombre, boolean alta) throws ErrorServicio {
+    public void crear(String nombre) throws ErrorServicio {
 
         Autor autor = new Autor();
 
         validar(nombre);
 
         autor.setNombre(nombre);
-        autor.setAlta(alta);
+        autor.setAlta(true);
 
         autorRepositorio.save(autor);
 
@@ -42,6 +50,12 @@ public class AutorServicio {
         }
 
     }
+
+    @Transactional(readOnly = true)
+    public List<Autor> listar() {
+        return autorRepositorio.findAll();
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void consultar(String id) throws ErrorServicio {
 
@@ -55,62 +69,71 @@ public class AutorServicio {
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Autor ");
+            throw new ErrorServicio(" No se encontro el Autor ");
 
         }
 
     }
-    @Transactional(rollbackFor = Exception.class)
-    public void modificar(String id, String nombre, boolean alta) throws ErrorServicio {
 
-        validar(nombre);
+    @Transactional(rollbackFor = Exception.class)
+    public void modificar(String id , String nombre) throws ErrorServicio {
+
+      
 
         Optional<Autor> respuesta = autorRepositorio.findById(id);
         if (respuesta.isPresent()) {
 
             Autor autor = respuesta.get();
-            autor.setNombre(nombre);
-            autor.setAlta(alta);
+            
+           autor.setNombre(nombre);
 
             autorRepositorio.save(autor);
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Autor ");
+            throw new ErrorServicio(" No se encontro el Autor ");
 
         }
     }
+
     public void darDeBaja(String id) throws ErrorServicio {
 
         Optional<Autor> respuesta = autorRepositorio.findById(id);
         if (respuesta.isPresent()) {
 
             Autor autor = respuesta.get();
-            autor.setAlta(false);
 
+            if (autor.getAlta() == true) {
+                autor.setAlta(false);
+            } else {
+                autor.setAlta(true);
+            }
             autorRepositorio.save(autor);
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Autor ");
+            throw new ErrorServicio(" No se encontro el Autor ");
 
         }
 
     }
+
     @Transactional(rollbackFor = Exception.class)
-    public void elimninar(String id) throws ErrorServicio {
+    public void eliminar(String id) throws ErrorServicio {
 
-        Optional<Autor> respuesta = autorRepositorio.findById(id);
-        if (respuesta.isPresent()) {
-
-            Autor autor = respuesta.get();
-            autorRepositorio.deleteById(id);
-
-            autorRepositorio.save(autor);
+        Optional<Autor> autorRespuesta = autorRepositorio.findById(id);
+        List<Libro> libroRespuesta = libroRepositorio.buscarPorIdAutor(id);
+        
+        if (autorRespuesta.isPresent()) {
+            if (libroRespuesta.isEmpty()) {
+                autorRepositorio.deleteById(autorRespuesta.get().getId());
+            }else{
+                throw new ErrorServicio("ERROR ! El autor tiene uno o mas Libros asignados ");
+            }
 
         } else {
 
-            throw new ErrorServicio(" No se encontro la Autor ");
+            throw new ErrorServicio(" No se encontro el Autor , o tiene tiene asignado un Libro ");
 
         }
     }
@@ -119,7 +142,7 @@ public class AutorServicio {
 
         if (nombre == null || nombre.isEmpty()) {
 
-            throw new ErrorServicio(" El nombre de la Autor no puede ser Nulo. ");
+            throw new ErrorServicio(" El nombre de el Autor no puede ser Nulo. ");
 
         }
 
